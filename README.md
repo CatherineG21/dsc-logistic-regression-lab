@@ -68,7 +68,8 @@ If we had a model that *always* said that the cover type was ponderosa pine (cla
 ```python
 # Replace None with appropriate text
 """
-None
+We would get an accuracy score of 0.928651, meaning the model achieved approximately 92.9% accuracy.
+This indicates that around 92.9% of the areas are correctly identified as being covered by ponderosa.
 """
 ```
 
@@ -107,11 +108,11 @@ We'll use a random state of 42 and `stratify=y` (to ensure an even balance of tr
 # Replace None with appropriate code
 
 # Import the relevant function
-None
+from sklearn.model_selection import train_test_split
 
 # Split df into X and y
-X = None
-y = None
+X = df.drop("Cover_Type", axis=1)
+y = df["Cover_Type"]
 
 # Perform train-test split with random_state=42 and stratify=y
 X_train, X_test, y_train, y_test = None
@@ -161,11 +162,11 @@ Using scikit-learn's `LogisticRegression` model, instantiate a classifier with `
 # Replace None with appropriate code
 
 # Import relevant class and function
-None
-None
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
 
 # Instantiate a LogisticRegression with random_state=42
-baseline_model = None
+baseline_model = LogisticRegression(random_state=42)
 
 # Use cross_val_score with scoring="neg_log_loss" to evaluate the model
 # on X_train and y_train
@@ -206,7 +207,10 @@ First, consider: which preprocessing steps should be taken with this dataset? Re
 ```python
 # Replace None with appropriate text
 """
-None
+Because of class imbalance, a resampling step such as SMOTE should be added.
+A ConvergenceWarning indicates that the gradient descent algorithm in logistic regression is 
+struggling to find an optimal solution. Since some variables are small (0 or 1) while others 
+range into the thousands, scaling is necessary to normalize the feature values and improve optimization.
 """
 ```
 
@@ -218,7 +222,8 @@ Does SMOTE work just like a typical scikit-learn transformer, where you fit the 
 ```python
 # Replace None with appropriate text
 """
-None
+No, SMOTE (Synthetic Minority Over-sampling Technique) is not used like a typical scikit-learn transformer. 
+It should be fit and applied only to the training data, not the test data.
 """
 ```
 
@@ -243,7 +248,10 @@ Does `StandardScaler` work just like a typical scikit-learn transformer, where y
 ```python
 # Replace None with appropriate text
 """
-None
+Yes, StandardScaler in scikit-learn works by fitting on the training data and then transforming both 
+the training and test sets using that same fit. However, fitting and transforming the entire X_train
+before cross-validation can lead to data leakage. Ideally, each training split within cross-validation 
+should have its own fitted scaler, which can be handled more effectively using pipelines
 """
 ```
 
@@ -330,8 +338,8 @@ Most of it is set up for you already, all you need to do is add the `SMOTE` and 
 # Replace None with appropriate code
 
 # Import relevant sklearn and imblearn classes
-None
-None
+from sklearn.preprocessing import StandardScaler
+from imblearn.over_sampling import SMOTE
 
 def custom_cross_val_score(estimator, X, y):
     # Create a list to hold the scores from each fold
@@ -346,16 +354,16 @@ def custom_cross_val_score(estimator, X, y):
         y_t, y_val = y.iloc[train_index], y.iloc[val_index]
         
         # Instantiate StandardScaler
-        scaler = None
+        scaler = StandardScaler()
         # Fit and transform X_t
-        X_t_scaled = None
+        X_t_scaled = scaler.fit_transform(X_t)
         # Transform X_val
-        X_val_scaled = None
+        X_val_scaled = scaler.transform(X_val)
         
         # Instantiate SMOTE with random_state=42 and sampling_strategy=0.28
-        sm = None
+        sm = SMOTE(random_state=42, sampling_strategy=0.28)
         # Fit and transform X_t_scaled and y_t using sm
-        X_t_oversampled, y_t_oversampled = None
+        X_t_oversampled, y_t_oversampled = sm.fit_resample(X_t_scaled, y_t)
         
         # Clone the provided model and fit it on the train subset
         temp_model = clone(estimator)
@@ -421,7 +429,10 @@ Remember that these are loss metrics, meaning lower is better. Are we overfittin
 ```python
 # Replace None with appropriate text
 """
-None
+Although SMOTE makes direct comparison of the results less straightforward, there is no indication of overfitting. 
+Overfitting would occur if the model performed significantly better on the training data than on the validation data.
+In this case, the model achieves better metrics on the validation data, where no synthetic samples were added, 
+suggesting that overfitting is not present.
 """
 ```
 
@@ -447,7 +458,11 @@ In the cell below, instantiate a `LogisticRegression` model with lower regulariz
 ```python
 # Replace None with appropriate code
 
-model_less_regularization = None
+model_less_regularization = LogisticRegression(
+    random_state=42,
+    class_weight={1: 0.28},
+    C=1e5
+)
 ```
 
 This code cell double-checks that the model was created correctly:
@@ -510,7 +525,14 @@ Remember to also specify `random_state=42`, `class_weight={1: 0.28}`, and `C` eq
 
 ```python
 # Replace None with appropriate code
-model_alternative_solver = None
+model_alternative_solver = LogisticRegression(
+    random_state=42,
+    class_weight={1: 0.28},
+    C=1e5,
+    solver="saga",
+    penalty="elasticnet",
+    l1_ratio=0.5
+)
 
 alternative_solver_train_scores, alternative_solver_val_scores = custom_cross_val_score(
     model_alternative_solver,
@@ -541,7 +563,15 @@ In the cell below, create a model called `model_more_iterations` that has the sa
 
 ```python
 # Replace None with appropriate code
-model_more_iterations = None
+model_more_iterations = Nonemodel_more_iterations = LogisticRegression(
+    random_state=42,
+    class_weight={1: 0.28},
+    C=1e5,
+    solver="saga",
+    penalty="elasticnet",
+    l1_ratio=0.5,
+    max_iter=2000
+)
 
 more_iterations_train_scores, more_iterations_val_scores = custom_cross_val_score(
     model_more_iterations,
@@ -583,14 +613,14 @@ In order to evaluate our final model, we need to preprocess the full training an
 # Replace None with appropriate code
 
 # Instantiate StandardScaler
-scaler = None
+scaler = StandardScaler()
 # Fit and transform X_train
-X_train_scaled = None
+X_train_scaled = scaler.fit_transform(X_train)
 # Transform X_test
-X_test_scaled = None
+X_test_scaled = scaler.transform(X_test)
 
 # Instantiate SMOTE with random_state=42 and sampling_strategy=0.28
-sm = None
+sm = SMOTE(random_state=42, sampling_strategy=0.28)
 # Fit and transform X_train_scaled and y_train using sm
 X_train_oversampled, y_train_oversampled = None
 ```
@@ -633,7 +663,7 @@ Although we noted the issues with accuracy as a metric on unbalanced datasets, a
 
 from sklearn.metrics import accuracy_score
 
-accuracy_score(None, None)
+accuracy_score(y_test, final_model.predict(X_test_scaled))
 ```
 
 In other words, our model correctly identifies the type of forest cover about 94.6% of the time, whereas always guessing the majority class (ponderosa pine) would only be accurate about 92.9% of the time.
@@ -647,10 +677,10 @@ If we always chose the majority class, we would expect a precision of 0, since w
 # Replace None with appropriate code
 
 # Import the relevant function
-None
+from sklearn.metrics import precision_score
 
 # Display the precision score
-None
+precision_score(y_test, final_model.predict(X_test_scaled))
 ```
 
 In other words, if our model labels a given cell of forest as class 1, there is about a 66.6% chance that it is actually class 1 (cottonwood/willow) and about a 33.4% chance that it is actually class 0 (ponderosa pine).
@@ -664,10 +694,10 @@ Again, if we always chose the majority class, we would expect a recall of 0. Wha
 # Replace None with appropriate code
 
 # Import the relevant function
-None
+from sklearn.metrics import recall_score
 
 # Display the recall score
-None
+recall_score(y_test, final_model.predict(X_test_scaled))
 ```
 
 In other words, if a given cell of forest is actually class 1, there is about a 47.9% chance that our model will correctly label it as class 1 (cottonwood/willow) and about a 52.1% chance that our model will incorrectly label it as class 0 (ponderosa pine).
